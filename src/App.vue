@@ -4,19 +4,12 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex'
+<script></script>
 
-export default {
-  computed: {
-    ...mapGetters(['test'])
-  },
-  mounted() {
-    this.$store.dispatch('setTest', 9).then(() => {
-      console.log(this.test)
-    })
-  }
+<style>
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
-</script>
-
-<style></style>
+</style>
