@@ -46,7 +46,8 @@ export default {
   font-size: 20px;
   .left {
     flex: 0 0 60px;
-    @include center;
+    @include left;
+    margin-left: 15px;
   }
   .right {
     flex: 1;
