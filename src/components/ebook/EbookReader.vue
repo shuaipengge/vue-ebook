@@ -20,7 +20,8 @@ export default {
   methods: {
     initEpub() {
       console.log(this.fileName)
-      const url = 'http://127.0.0.1:8888/epub/' + this.fileName + '.epub'
+      const url =
+        `${process.env.VUE_APP_RES_URL}/epub/` + this.fileName + '.epub'
       this.book = new Epub(url)
       this.setCurrentBook(this.book)
       this.rendition = this.book.renderTo('read', {
@@ -54,6 +55,24 @@ export default {
         // 禁用事件传播
         event.stopPropagation()
       })
+      this.rendition.hooks.content.register(contents => {
+        Promise.all([
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/cabin.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/daysOne.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/montserrat.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/tangerine.css`
+          )
+        ]).then(() => {
+          console.log('Font all loading')
+        })
+      })
     },
     prevPage() {
       if (this.rendition) {
@@ -71,6 +90,7 @@ export default {
       // this.$store.dispatch('setMenuVisible', !this.menuVisible)
       if (this.menuVisible) {
         this.setSettingVisible(-1)
+        this.setFontFamilyVisible(false)
       }
       this.setMenuVisible(!this.menuVisible)
     },
@@ -78,6 +98,7 @@ export default {
       // this.$store.dispatch('setMenuVisible', false)
       this.setMenuVisible(false)
       this.setSettingVisible(-1)
+      this.setFontFamilyVisible(false)
     }
   }
 }
