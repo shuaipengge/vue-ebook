@@ -6,6 +6,12 @@
 <script>
 import { ebookMixin } from '@/utils/mixin'
 import Epub from 'epubjs'
+import {
+  getFontFamily,
+  getFontSize,
+  saveFontFamily,
+  saveFontSize
+} from '../../utils/localStorage'
 global.ePub = Epub
 
 export default {
@@ -19,7 +25,6 @@ export default {
   },
   methods: {
     initEpub() {
-      console.log(this.fileName)
       const url =
         `${process.env.VUE_APP_RES_URL}/epub/` + this.fileName + '.epub'
       this.book = new Epub(url)
@@ -29,7 +34,10 @@ export default {
         height: innerHeight,
         method: 'default'
       })
-      this.rendition.display()
+      this.rendition.display().then(() => {
+        this.initFontSize()
+        this.initFontFamily()
+      })
       // epub.js 基于iframe实现 需要向iframe绑定 触摸开始 触摸结束 事件
       this.rendition.on('touchstart', event => {
         // 第一个手机触摸的x坐标
@@ -99,6 +107,24 @@ export default {
       this.setMenuVisible(false)
       this.setSettingVisible(-1)
       this.setFontFamilyVisible(false)
+    },
+    initFontSize() {
+      const fontSize = getFontSize(this.fileName)
+      if (!fontSize) {
+        saveFontSize(this.fileName, this.defaultFontFamily)
+      } else {
+        this.rendition.themes.fontSize(fontSize)
+        this.setDefaultFontSize(fontSize)
+      }
+    },
+    initFontFamily() {
+      const font = getFontFamily(this.fileName)
+      if (!font) {
+        saveFontFamily(this.fileName, this.defaultFontFamily)
+      } else {
+        this.rendition.themes.font(font)
+        this.setDefaultFontFamily(font)
+      }
     }
   }
 }
