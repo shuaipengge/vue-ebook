@@ -27,11 +27,7 @@ export default {
     )
   },
   methods: {
-    initEpub() {
-      const url =
-        `${process.env.VUE_APP_RES_URL}/epub/` + this.fileName + '.epub'
-      this.book = new Epub(url)
-      this.setCurrentBook(this.book)
+    initRendition() {
       this.rendition = this.book.renderTo('read', {
         width: innerWidth,
         height: innerHeight,
@@ -43,6 +39,26 @@ export default {
         this.initFontFamily()
         this.initGlobalStyle()
       })
+      this.rendition.hooks.content.register(contents => {
+        Promise.all([
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/cabin.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/daysOne.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/montserrat.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/tangerine.css`
+          )
+        ]).then(() => {
+          console.log('Font all loading')
+        })
+      })
+    },
+    initGesture() {
       // epub.js 基于iframe实现 需要向iframe绑定 触摸开始 触摸结束 事件
       this.rendition.on('touchstart', event => {
         // 第一个手机触摸的x坐标
@@ -68,24 +84,24 @@ export default {
         // 禁用事件传播
         event.stopPropagation()
       })
-      this.rendition.hooks.content.register(contents => {
-        Promise.all([
-          contents.addStylesheet(
-            `${process.env.VUE_APP_RES_URL}/fonts/cabin.css`
-          ),
-          contents.addStylesheet(
-            `${process.env.VUE_APP_RES_URL}/fonts/daysOne.css`
-          ),
-          contents.addStylesheet(
-            `${process.env.VUE_APP_RES_URL}/fonts/montserrat.css`
-          ),
-          contents.addStylesheet(
-            `${process.env.VUE_APP_RES_URL}/fonts/tangerine.css`
+    },
+    initEpub() {
+      const url =
+        `${process.env.VUE_APP_RES_URL}/epub/` + this.fileName + '.epub'
+      this.book = new Epub(url)
+      this.setCurrentBook(this.book)
+      this.initRendition()
+      this.initGesture()
+      this.book.ready
+        .then(() => {
+          return this.book.locations.generate(
+            750 * (window.innerWidth / 375) * (getFontSize(this.fileName) / 16)
           )
-        ]).then(() => {
-          console.log('Font all loading')
         })
-      })
+        .then(location => {
+          // console.log(location)
+          this.setBookAvailable(true)
+        })
     },
     prevPage() {
       if (this.rendition) {
