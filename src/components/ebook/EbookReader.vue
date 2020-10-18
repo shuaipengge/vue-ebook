@@ -14,6 +14,7 @@ import {
   saveFontSize,
   saveTheme
 } from '../../utils/localStorage'
+
 global.ePub = Epub
 
 export default {
@@ -40,6 +41,7 @@ export default {
         this.initTheme()
         this.initFontSize()
         this.initFontFamily()
+        this.initGlobalStyle()
       })
       // epub.js 基于iframe实现 需要向iframe绑定 触摸开始 触摸结束 事件
       this.rendition.on('touchstart', event => {
@@ -133,9 +135,9 @@ export default {
       let defaultTheme = getTheme(this.fileName)
       if (!defaultTheme) {
         defaultTheme = this.themeList[0].name
-        this.setDefaultTheme(defaultTheme)
         saveTheme(this.fileName, defaultTheme)
       }
+      this.setDefaultTheme(defaultTheme)
       this.themeList.forEach(theme => {
         this.rendition.themes.register(theme.name, theme.style)
       })
