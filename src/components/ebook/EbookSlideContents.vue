@@ -7,6 +7,7 @@
         </div>
         <input
           type="text"
+          v-model="searchText"
           :placeholder="$t('book.searchHint')"
           class="slide-contents-search-input"
           @click="showSearchPage()"
@@ -20,7 +21,7 @@
         {{ $t('book.cancel') }}
       </div>
     </div>
-    <div class="slide-contents-book-wrapper">
+    <div class="slide-contents-book-wrapper" v-show="!searchVisible">
       <div class="slide-contents-book-img-wrapper">
         <img :src="cover" class="slide-contents-book-img" />
       </div>
@@ -40,7 +41,12 @@
         <div class="slide-contents-book-time">{{ getReadTimeText() }}</div>
       </div>
     </div>
-    <scroll class="slide-contents-list" :top="156" :bottom="48" ref="scroll">
+    <scroll
+      class="slide-contents-list"
+      :top="156"
+      :bottom="48"
+      v-show="!searchVisible"
+    >
       <div
         class="slide-contents-item"
         v-for="(item, index) in navigation"
@@ -56,6 +62,20 @@
         <span class="slide-contents-item-page"></span>
       </div>
     </scroll>
+    <scroll
+      class="slide-search-list"
+      :top="66"
+      :bottom="48"
+      v-show="searchVisible"
+    >
+      <div
+        class="slide-search-item"
+        v-for="(item, index) in searchList"
+        :key="index"
+      >
+        {{ item.excerpt }}
+      </div>
+    </scroll>
   </div>
 </template>
 
@@ -69,15 +89,37 @@ export default {
   components: { Scroll },
   data() {
     return {
-      searchVisible: false
+      searchVisible: false,
+      searchList: null,
+      searchText: ''
     }
   },
+  mounted() {
+    setTimeout(() => {
+      this.doSearch('added').then(list => {
+        this.searchList = list
+        console.log(list)
+      })
+    }, 1000)
+  },
   methods: {
+    doSearch(q) {
+      return Promise.all(
+        this.currentBook.spine.spineItems.map(section =>
+          section
+            .load(this.currentBook.load.bind(this.currentBook))
+            .then(section.find.bind(section, q))
+            .finally(section.unload.bind(section))
+        )
+      ).then(results => Promise.resolve([].concat.apply([], results)))
+    },
     showSearchPage() {
       this.searchVisible = true
     },
     hideSearchPage() {
       this.searchVisible = false
+      this.searchText = ''
+      this.searchList = null
     },
     contentItemStyle(item) {
       return {
@@ -193,6 +235,17 @@ export default {
       }
       .slide-contents-item-page {
       }
+    }
+  }
+  .slide-search-list {
+    width: 100%;
+    padding: 0 15px;
+    box-sizing: border-box;
+    .slide-search-item {
+      font-size: 14px;
+      line-height: 16px;
+      padding: 20px 0;
+      box-sizing: border-box;
     }
   }
 }
