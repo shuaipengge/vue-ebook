@@ -11,6 +11,7 @@
           :placeholder="$t('book.searchHint')"
           class="slide-contents-search-input"
           @click="showSearchPage()"
+          @keyup.enter.exact="search()"
         />
       </div>
       <div
@@ -56,7 +57,7 @@
           class="slide-contents-item-label"
           :class="{ selected: section === index }"
           :style="contentItemStyle(item)"
-          @click="displayNavigation(item.href)"
+          @click="displayNavigation(item.href, false)"
           >{{ item.label }}</span
         >
         <span class="slide-contents-item-page"></span>
@@ -72,9 +73,9 @@
         class="slide-search-item"
         v-for="(item, index) in searchList"
         :key="index"
-      >
-        {{ item.excerpt }}
-      </div>
+        @click="displayNavigation(item.cfi, true)"
+        v-html="item.excerpt"
+      ></div>
     </scroll>
   </div>
 </template>
@@ -94,15 +95,21 @@ export default {
       searchText: ''
     }
   },
-  mounted() {
-    setTimeout(() => {
-      this.doSearch('added').then(list => {
-        this.searchList = list
-        console.log(list)
-      })
-    }, 1000)
-  },
   methods: {
+    search() {
+      if (this.searchText && this.searchText.length > 0) {
+        this.doSearch(this.searchText).then(list => {
+          this.searchList = list
+          this.searchList.map(item => {
+            item.excerpt = item.excerpt.replace(
+              this.searchText,
+              `<span class="content-search-text">${this.searchText}</span>`
+            )
+            return item
+          })
+        })
+      }
+    },
     doSearch(q) {
       return Promise.all(
         this.currentBook.spine.spineItems.map(section =>
@@ -126,9 +133,12 @@ export default {
         marginLeft: `${px2rem(item.level * 15)}rem`
       }
     },
-    displayNavigation(target) {
+    displayNavigation(target, highlight = false) {
       this.display(target, () => {
         this.hideTitleAndMenu()
+        if (highlight) {
+          this.currentBook.rendition.annotations.highlight(target)
+        }
       })
     }
   }
